@@ -133,20 +133,12 @@ class Product extends Model
 
     public function scopeLowStock($query)
     {
-        return $query->whereHas('productStocks', function ($q) {
-            $q->selectRaw('product_id, SUM(quantity) as total_stock')
-                ->groupBy('product_id')
-                ->havingRaw('total_stock <= products.min_stock');
-        });
+        return $query->whereRaw('(SELECT COALESCE(SUM(quantity), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) <= products.min_stock');
     }
 
     public function scopeOutOfStock($query)
     {
-        return $query->whereHas('productStocks', function ($q) {
-            $q->selectRaw('product_id, SUM(quantity) as total_stock')
-                ->groupBy('product_id')
-                ->havingRaw('total_stock <= 0');
-        });
+        return $query->whereRaw('(SELECT COALESCE(SUM(quantity), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) <= 0');
     }
 
     public function scopeSearch($query, $term)
